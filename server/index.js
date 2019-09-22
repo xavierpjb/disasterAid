@@ -1,7 +1,9 @@
 // Firebase App (the core Firebase SDK) is always required and
 // must be listed before other Firebase SDKs
-var firebase = require("firebase");
+const firebase = require("firebase");
 const path = require('path');
+const request = require('request');
+
 
 // Add the Firebase products that you want to use
 //require("firebase/auth");
@@ -31,29 +33,79 @@ res.status(400);
 res.send('probem');
 });
 
+app.use(express.json())
+app.use (express.urlencoded({extended: false}))
+app.use(function(req, res, next) {
+   res.header("Access-Control-Allow-Origin", "*");
+   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With,Content-Type, Accept");
+   next();
+});
+
 app.get('/', (req, res) =>
 res.send(
   'Ready for command!')
 )
 
+
 app.get('/yo', function(req,res){
   var ref = firebase.database().ref("Items/")
   ref.once("value", function(snapshot) {
-  var data = snapshot.val();   //Data is in JSON format.
-  console.log(data);
-  console.log("reached end")
-  res.status(200);
-  res.redirect("/");
-
+    var data = snapshot.val();   //Data is in JSON format.
+    console.log(data);
+    console.log("reached end")
+    res.status(200);
+    res.redirect("/");
+  })
 });
-  //var userId = firebase.auth().currentUser.uid;
-  //res.sendFile(path.join(__dirname+'/index.html'))
-  //return firebase.database().ref('/Items/NewYorkCity/Water/').once('Qty').then(function(snapshot) {
-  //  var username = snapshot.val()//(snapshot.val() && snapshot.val().username) || 'Anonymous';
-  //  console.log(username);
-  // ...
-  //});
 
+const donationItems = {
+  "NewYorkCity": {
+    "Water": {
+      "Qty": 3
+    },
+    "Clothes": {
+      "Qty": 5,
+      "Des": "Yoyo"
+    }
+  }
+};
+
+var options = {
+  uri: 'http://0.0.0.0:3000/donateItems',
+  method: 'POST',
+  headers: {
+     "content-type": "application/json",
+  },
+  body: JSON.stringify(donationItems)
+};
+
+app.get('/sendDonationTest', function(req,res){
+  request(options, function (error, response, request) {
+
+    if (!error && response.statusCode == 200) {
+      //console.log(body.json) // Print the shortened url.
+      //console.log(options.body + "got here")
+
+    }
+
+  });
+});
+
+app.post('/donateItems', function(req,res){
+
+  //console.log(req);
+  res.status(200);
+  console.log(Object.keys(req.body))
+  //get elements and check for presence
+  console.log(Object.keys(req.body.NewYorkCity).length)
+  //If available increment count
+
+  //if new item make new spot
+
+
+  res.end()
+  //res.redirect("/");
 })
+
 
 app.listen(port, () => console.log(`Example app listening on port ${port}!`))
